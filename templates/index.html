@@ -1,33 +1,159 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>License Plate Recognition</title>
+    <title>License Plate Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #141e30, #243b55);
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            width: 400px;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #243b55;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+        }
+
+        button {
+            background: #243b55;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s ease;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #141e30;
+            transform: scale(1.05);
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #141e30;
+        }
+
+        .loader {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .loader div {
+            width: 12px;
+            height: 12px;
+            background: #243b55;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        .loader div:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loader div:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            to { transform: translateY(-10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        .footer {
+            margin-top: 25px;
+            font-size: 12px;
+            color: gray;
+        }
+    </style>
 </head>
+
 <body>
-    <h2>Upload Video</h2>
+
+<div class="container">
+    <h1>🚗 License Plate Detector</h1>
 
     <form id="uploadForm">
         <input type="file" name="video" required>
-        <button type="submit">Upload</button>
+        <br>
+        <button type="submit">Upload & Detect</button>
     </form>
 
-    <h3 id="result"></h3>
+    <div class="loader" id="loader">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
 
-    <script>
-        const form = document.getElementById('uploadForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
+    <div class="result" id="result"></div>
 
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
+    <div class="footer">
+        AI Powered Number Plate Recognition
+    </div>
+</div>
 
-            const data = await response.json();
-            document.getElementById('result').innerText =
-                "Detected Plate: " + data.plate_number;
-        });
-    </script>
+<script>
+const form = document.getElementById('uploadForm');
+const loader = document.getElementById('loader');
+const resultDiv = document.getElementById('result');
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    loader.style.display = "block";
+    resultDiv.innerText = "";
+
+    const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+    });
+
+    const data = await response.json();
+
+    loader.style.display = "none";
+
+    if (data.plate_number) {
+        resultDiv.innerHTML = "✅ Detected Plate: <br>" + data.plate_number;
+    } else {
+        resultDiv.innerText = "❌ No plate detected!";
+    }
+});
+</script>
+
 </body>
 </html>
