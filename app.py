@@ -42,29 +42,36 @@ def upload_video():
 
 def process_video(video_path):
     cap = cv2.VideoCapture(video_path)
-    ret, frame = cap.read()
+
+    plate_result = None
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = imutils.rotate(gray, 270)
+
+        threshold_value = threshold_otsu(gray)
+        binary = gray > threshold_value
+
+        label_image = measure.label(binary)
+
+        for region in regionprops(label_image):
+            if region.area < 50:
+                continue
+
+            min_row, min_col, max_row, max_col = region.bbox
+            plate = binary[min_row:max_row, min_col:max_col]
+
+            plate_result = predict_characters(plate)
+
+            if plate_result:
+                cap.release()
+                return plate_result
+
     cap.release()
-
-    if not ret:
-        return "No frame detected"
-
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray = imutils.rotate(gray, 270)
-
-    threshold_value = threshold_otsu(gray)
-    binary = gray > threshold_value
-
-    label_image = measure.label(binary)
-
-    for region in regionprops(label_image):
-        if region.area < 50:
-            continue
-
-        min_row, min_col, max_row, max_col = region.bbox
-        plate = binary[min_row:max_row, min_col:max_col]
-
-        return predict_characters(plate)
-
     return "Plate Not Found"
 
 
